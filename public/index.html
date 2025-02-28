@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modifier la variable</title>
+</head>
+<body>
+<h1>Modifier la variable</h1>
+
+<div>
+    <p>Valeur actuelle : <span id="current-value"></span></p>
+</div>
+
+<form id="variable-form">
+    <select id="value-select">
+        <!-- Les options seront ajoutées ici dynamiquement -->
+    </select>
+    <button type="submit">Modifier</button>
+</form>
+
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const currentValueElement = document.getElementById("current-value");
+
+        // Fonction pour récupérer la valeur actuelle
+        const getCurrentValue = async () => {
+            const response = await fetch('/device');
+            const data = await response.json();
+            currentValueElement.textContent = data.currentDevice;
+        };
+
+        getCurrentValue();
+
+        const getDevices = async () => {
+            const response = await fetch('/devices');
+            const data = await response.json();
+            populateSelect(data.devices)
+        };
+
+        getDevices();
+
+        const selectElement = document.getElementById("value-select");
+
+        function populateSelect(array) {
+            array.flat().forEach(optionText => {
+                const option = document.createElement("option");
+                option.value = optionText.toLowerCase().replace(/\s+/g, '-'); // Génère une valeur unique pour chaque option
+                option.textContent = optionText;
+                selectElement.appendChild(option);
+            });
+        }
+
+        getCurrentValue();
+
+        // Gestion du formulaire
+        const form = document.getElementById("variable-form");
+        form.addEventListener("submit", async (event) => {
+            event.preventDefault();
+            const newValue = selectElement.value;
+
+            const response = await fetch('/device', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ newValue })
+            });
+
+            await getCurrentValue();  // Mise à jour de la valeur affichée
+        });
+    });
+</script>
+</body>
+</html>
